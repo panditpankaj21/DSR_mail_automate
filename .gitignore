@@ -1,0 +1,32 @@
+# Standard Python ignores
+**/__pycache__/
+*.pyc
+*.pyd
+*.pyo
+.Python
+env/
+venv/
+build/
+dist/
+develop-eggs/
+.eggs/
+*.egg-info/
+
+# Playwright-specific ignores
+# The .auth directory is recommended for storing authentication state and should not be committed to version control
+playwright/.auth
+# Other potential Playwright output directories or files
+playwright/driver/ 
+htmlcov/
+.coverage*
+junit/ 
+htmldocs/
+
+# IDE and OS specific files
+.idea/         # For PyCharm/IntelliJ
+.vscode/       # For VS Code
+.DS_Store      # For macOS
+Thumbs.db      # For Windows
+
+# Pipenv lock file (optional, include if you decide not to track it)
+# Pipfile.lock 

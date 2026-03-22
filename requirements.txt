@@ -1,0 +1,13 @@
+# ─────────────────────────────────────────────────────────────
+# requirements.txt
+# Install with: pip install -r requirements.txt
+# Then run:     playwright install chromium
+# ─────────────────────────────────────────────────────────────
+
+playwright==1.42.0        # browser automation — has pre-built wheels for all Python versions
+beautifulsoup4==4.12.3    # HTML parser — extracts data from page content
+rich==13.7.1              # beautiful terminal output — tables, colors, progress bars
+
+# NOTE: No lxml — we use Python's built-in html.parser instead.
+# lxml requires Microsoft Visual C++ build tools to compile on Windows.
+# html.parser works perfectly and needs zero installation.

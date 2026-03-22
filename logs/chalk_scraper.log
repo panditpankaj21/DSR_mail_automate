@@ -1,0 +1,168 @@
+2026-03-22 19:13:56,340 [INFO] scraper: 🚀 Starting Playwright with your Chrome profile...
+2026-03-22 19:13:56,340 [INFO] scraper:    Profile path: C:\Users\pkp20\AppData\Local\Google\Chrome\User Data
+2026-03-22 19:13:57,579 [ERROR] root: Scraping failed: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Default --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=14916
+Traceback (most recent call last):
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\main.py", line 206, in run_scraping
+    with ChalkScraper() as scraper:
+         ^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\src\scraper.py", line 108, in __enter__
+    self.context = self.playwright.chromium.launch_persistent_context(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\sync_api\_generated.py", line 14115, in launch_persistent_context
+    self._sync(
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_sync_base.py", line 113, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_browser_type.py", line 157, in launch_persistent_context
+    from_channel(await self._channel.send("launchPersistentContext", params)),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 59, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 509, in wrap_api_call
+    return await cb()
+           ^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 97, in inner_send
+    result = next(iter(done)).result()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Default --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=14916
+2026-03-22 19:15:01,904 [INFO] scraper: 🚀 Starting Playwright with your Chrome profile...
+2026-03-22 19:15:01,904 [INFO] scraper:    Profile path: C:\Users\pkp20\AppData\Local\Google\Chrome\User Data
+2026-03-22 19:16:27,425 [ERROR] root: Scraping failed: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Default --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=2000
+[pid=2000][err] 
+[pid=2000][err] DevTools remote debugging requires a non-default data directory. Specify this using --user-data-dir.
+[pid=2000][err] Created TensorFlow Lite XNNPACK delegate for CPU.
+[pid=2000][err] [2000:10080:0322/191505.217:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[pid=2000][err] [2000:10080:0322/191526.169:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[pid=2000][err] [2000:10080:0322/191624.519:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+Traceback (most recent call last):
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\main.py", line 206, in run_scraping
+    with ChalkScraper() as scraper:
+         ^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\src\scraper.py", line 108, in __enter__
+    self.context = self.playwright.chromium.launch_persistent_context(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\sync_api\_generated.py", line 14115, in launch_persistent_context
+    self._sync(
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_sync_base.py", line 113, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_browser_type.py", line 157, in launch_persistent_context
+    from_channel(await self._channel.send("launchPersistentContext", params)),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 59, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 509, in wrap_api_call
+    return await cb()
+           ^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 97, in inner_send
+    result = next(iter(done)).result()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Default --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=2000
+[pid=2000][err] 
+[pid=2000][err] DevTools remote debugging requires a non-default data directory. Specify this using --user-data-dir.
+[pid=2000][err] Created TensorFlow Lite XNNPACK delegate for CPU.
+[pid=2000][err] [2000:10080:0322/191505.217:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[pid=2000][err] [2000:10080:0322/191526.169:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[pid=2000][err] [2000:10080:0322/191624.519:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+2026-03-22 19:20:41,737 [INFO] scraper: 🚀 Starting Playwright with your Chrome profile...
+2026-03-22 19:20:41,737 [INFO] scraper:    Profile path: C:\Users\pkp20\AppData\Local\Google\Chrome\User Data
+2026-03-22 19:22:44,211 [ERROR] asyncio: Task was destroyed but it is pending!
+task: <Task pending name='Task-4' coro=<BrowserType.launch_persistent_context() done, defined at C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_browser_type.py:99> wait_for=<Future pending cb=[Task.task_wakeup()]> cb=[SyncBase._sync.<locals>.<lambda>() at C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_sync_base.py:109, ProtocolCallback.__init__.<locals>.cb() at C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py:191]>
+2026-03-22 19:23:33,975 [INFO] scraper: 🚀 Starting Playwright with your Chrome profile...
+2026-03-22 19:23:33,975 [INFO] scraper:    Profile path: C:\Users\pkp20\AppData\Local\Google\Chrome\User Data
+2026-03-22 19:23:55,389 [ERROR] root: Scraping failed: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=pankaj --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=2244
+[pid=2244][err] 
+[pid=2244][err] DevTools remote debugging requires a non-default data directory. Specify this using --user-data-dir.
+[pid=2244][err] Created TensorFlow Lite XNNPACK delegate for CPU.
+[pid=2244][err] [2244:17004:0322/192336.767:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+Traceback (most recent call last):
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\main.py", line 206, in run_scraping
+    with ChalkScraper() as scraper:
+         ^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\src\scraper.py", line 108, in __enter__
+    self.context = self.playwright.chromium.launch_persistent_context(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\sync_api\_generated.py", line 14115, in launch_persistent_context
+    self._sync(
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_sync_base.py", line 113, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_browser_type.py", line 157, in launch_persistent_context
+    from_channel(await self._channel.send("launchPersistentContext", params)),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 59, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 509, in wrap_api_call
+    return await cb()
+           ^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 97, in inner_send
+    result = next(iter(done)).result()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=pankaj --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=2244
+[pid=2244][err] 
+[pid=2244][err] DevTools remote debugging requires a non-default data directory. Specify this using --user-data-dir.
+[pid=2244][err] Created TensorFlow Lite XNNPACK delegate for CPU.
+[pid=2244][err] [2244:17004:0322/192336.767:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+2026-03-22 19:27:58,907 [INFO] scraper: 🚀 Starting Playwright with your Chrome profile...
+2026-03-22 19:27:58,907 [INFO] scraper:    Profile path: C:\Users\pkp20\AppData\Local\Google\Chrome\User Data
+2026-03-22 19:27:59,892 [ERROR] root: Scraping failed: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Profile 2 --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=15660
+Traceback (most recent call last):
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\main.py", line 206, in run_scraping
+    with ChalkScraper() as scraper:
+         ^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\OneDrive\Desktop\Projects\dsr_mail\src\scraper.py", line 108, in __enter__
+    self.context = self.playwright.chromium.launch_persistent_context(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\sync_api\_generated.py", line 14115, in launch_persistent_context
+    self._sync(
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_sync_base.py", line 113, in _sync
+    return task.result()
+           ^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_browser_type.py", line 157, in launch_persistent_context
+    from_channel(await self._channel.send("launchPersistentContext", params)),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 59, in send
+    return await self._connection.wrap_api_call(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 509, in wrap_api_call
+    return await cb()
+           ^^^^^^^^^^
+  File "C:\Users\pkp20\AppData\Local\Programs\Python\Python312\Lib\site-packages\playwright\_impl\_connection.py", line 97, in inner_send
+    result = next(iter(done)).result()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+playwright._impl._errors.TargetClosedError: Target page, context or browser has been closed
+Browser logs:
+
+<launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --enable-features=NetworkService,NetworkServiceInProcess --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=ImprovedCookieControls,LazyFrameLoading,GlobalMediaControls,DestroyProfileOnBrowserClose,MediaRouter,DialMediaRouteProvider,AcceptCHFrame,AutoExpandDetailsElement,CertificateTransparencyComponentUpdater,AvoidUnnecessaryBeforeUnloadCheckSync,Translate,HttpsUpgrades,PaintHolding --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --enable-automation --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --no-sandbox --profile-directory=Profile 2 --disable-blink-features=AutomationControlled --no-first-run --no-default-browser-check --user-data-dir=C:\Users\pkp20\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank
+<launched> pid=15660
