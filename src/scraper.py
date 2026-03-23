@@ -1,5 +1,9 @@
 # ─────────────────────────────────────────────────────────────
-# scraper.py  —  Core Playwright scraping logic
+# scraper.py  —  Selenium-based Chalk scraper
+#
+# WHY SELENIUM:
+#   Playwright needs 'greenlet' which needs C++ compiler on Python 3.13+
+#   Selenium uses pre-built wheels — works on ANY Python version, zero compilation
 #
 # WHAT THIS DOES:
 #   1. Opens Chrome using YOUR existing profile (already logged into Chalk)
@@ -9,17 +13,29 @@
 #   5. Returns structured data
 # ─────────────────────────────────────────────────────────────
 
+import re
 import logging
 import time
 from dataclasses import dataclass, field
 from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright, Page, BrowserContext, TimeoutError as PlaywrightTimeout
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    WebDriverException,
+)
+from selenium.webdriver.common.action_chains import ActionChains
 
 from src.config import (
     CHROME_PROFILE_PATH,
     CHROME_PROFILE_NAME,
     PAGE_LOAD_TIMEOUT,
-    TAB_LOAD_TIMEOUT,
     ELEMENT_WAIT_TIMEOUT,
     SUMMARY_TAB_TEXT,
     EXECUTION_SUMMARY_TAB_TEXT,
@@ -31,122 +47,142 @@ log = logging.getLogger("scraper")
 
 # ─────────────────────────────────────────────────────────────
 # DATA MODELS
-# These dataclasses define exactly what we collect per page
 # ─────────────────────────────────────────────────────────────
 
 @dataclass
 class ExecutionRow:
     """One row in the Execution Summary table."""
-    cycle:          str = ""   # e.g. "Sanity Dual Stack"
-    total_planned:  str = ""   # e.g. "114"
-    total_executed: str = ""   # e.g. "114"
-    passed:         str = ""   # e.g. "113"
-    passed_pct:     str = ""   # e.g. "99%"
-    failed:         str = ""   # e.g. "1"
-    failed_pct:     str = ""   # e.g. "1%"
-    blocked:        str = ""   # e.g. "0"
-    blocked_pct:    str = ""   # e.g. "0%"
+    cycle:          str = ""
+    total_planned:  str = ""
+    total_executed: str = ""
+    passed:         str = ""
+    passed_pct:     str = ""
+    failed:         str = ""
+    failed_pct:     str = ""
+    blocked:        str = ""
+    blocked_pct:    str = ""
 
 
 @dataclass
 class SummaryData:
     """All fields from the Summary tab."""
-    # Left column
-    primary:                    str = ""   # @R, Mohandas @Aravapalli, Vamsi
-    fw_version:                 str = ""   # 5.4.0
-    start_date:                 str = ""   # 04 Mar 2026
-    completion_date:            str = ""   # 25 Mar 2026
-    release_dev_complete:       str = ""   # TBD
-    release_val_completion:     str = ""   # TBD
-    release_dlm_complete:       str = ""   # TBD
-    type:                       str = ""   # None
-    on_schedule:                str = ""   # YES / NO
-    cr_details:                 str = ""
-    status:                     str = ""   # IN DEVTEST
-    osc_version:                str = ""   # OSC Version: 1.148.15-rc1-master
-    overall_summary:            str = ""   # Pass: 95% | Fail: 2% | Blocked: 0%
-    he:                         str = ""
-    # Right column
-    testers:                    str = ""
-    pm:                         str = ""
+    primary:                  str = ""
+    fw_version:               str = ""
+    start_date:               str = ""
+    completion_date:          str = ""
+    release_dev_complete:     str = ""
+    release_val_completion:   str = ""
+    release_dlm_complete:     str = ""
+    type:                     str = ""
+    on_schedule:              str = ""
+    cr_details:               str = ""
+    status:                   str = ""
+    osc_version:              str = ""
+    overall_summary:          str = ""
+    he:                       str = ""
+    testers:                  str = ""
+    pm:                       str = ""
 
 
 @dataclass
 class ChalkPageData:
-    """Complete data for one Chalk page URL."""
-    url:              str = ""
-    page_id:          str = ""
-    page_title:       str = ""
+    """Complete scraped data for one Chalk page URL."""
+    url:              str  = ""
+    page_id:          str  = ""
+    page_title:       str  = ""
     scrape_success:   bool = False
-    error_message:    str = ""
+    error_message:    str  = ""
 
-    summary:          SummaryData = field(default_factory=SummaryData)
-    execution_rows:   list[ExecutionRow] = field(default_factory=list)
+    summary:          SummaryData  = field(default_factory=SummaryData)
+    execution_rows:   list         = field(default_factory=list)
     execution_totals: ExecutionRow = field(default_factory=ExecutionRow)
 
 
 # ─────────────────────────────────────────────────────────────
-# SCRAPER CLASS
+# SELENIUM SCRAPER CLASS
 # ─────────────────────────────────────────────────────────────
 
 class ChalkScraper:
 
     def __init__(self):
-        self.playwright = None
-        self.context    = None
+        self.driver = None
 
     def __enter__(self):
-        """Start Playwright and open Chrome with user's existing profile."""
-        log.info("🚀 Starting Playwright with your Chrome profile...")
+        """
+        Open Chrome with the user's existing profile.
+
+        KEY POINT:
+        We pass --user-data-dir pointing to YOUR Chrome profile folder.
+        This means Chrome opens with ALL your existing cookies and sessions.
+        Chalk sees you as already logged in — no credentials needed.
+
+        Chrome must be fully closed before this runs.
+        Two Chrome instances cannot share the same profile folder.
+        """
+        log.info("🚀 Starting Chrome with your existing profile...")
         log.info(f"   Profile path: {CHROME_PROFILE_PATH}")
 
-        self.playwright = sync_playwright().start()
+        options = Options()
 
-        # launch_persistent_context = use YOUR Chrome profile folder
-        # This means all your cookies, sessions, logins are already there
-        # Chalk will see you as already logged in
-        self.context = self.playwright.chromium.launch_persistent_context(
-            user_data_dir     = CHROME_PROFILE_PATH,
-            channel           = "chrome",        # use installed Google Chrome (not Chromium)
-            headless          = False,            # show the browser window so user can see progress
-            args              = [
-                f"--profile-directory={CHROME_PROFILE_NAME}",
-                "--disable-blink-features=AutomationControlled",  # don't let site detect automation
-                "--no-first-run",
-                "--no-default-browser-check",
-            ],
-            slow_mo           = 500,             # slight delay so scraping looks natural
-            viewport          = {"width": 1280, "height": 800},
+        # ── Use YOUR existing Chrome profile ─────────────────
+        options.add_argument(f"--user-data-dir={CHROME_PROFILE_PATH}")
+        options.add_argument(f"--profile-directory={CHROME_PROFILE_NAME}")
+
+        # ── Prevent Chalk detecting automation ───────────────
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        options.add_experimental_option("useAutomationExtension", False)
+
+        # ── Other stability options ───────────────────────────
+        options.add_argument("--no-first-run")
+        options.add_argument("--no-default-browser-check")
+        options.add_argument("--disable-popup-blocking")
+        options.add_argument("--disable-notifications")
+        options.add_argument("--start-maximized")
+
+        # ── headless=False — show the browser so user can see progress
+        # Set to True if you want it to run in background silently
+        # options.add_argument("--headless=new")
+
+        # ── selenium-manager auto-downloads the right chromedriver ──
+        # No need to manually download chromedriver — Selenium 4.6+ handles it
+        self.driver = webdriver.Chrome(options=options)
+
+        # Tell Chrome to not show "Chrome is being controlled by automated software" bar
+        self.driver.execute_cdp_cmd(
+            "Page.addScriptToEvaluateOnNewDocument",
+            {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"}
         )
+
+        # Set page load timeout
+        self.driver.set_page_load_timeout(PAGE_LOAD_TIMEOUT // 1000)  # convert ms to seconds
 
         log.info("✅ Chrome opened with your profile. Chalk session should be active.")
         return self
 
     def __exit__(self, *args):
-        """Clean up — close browser and Playwright."""
-        if self.context:
-            self.context.close()
-        if self.playwright:
-            self.playwright.stop()
+        """Close the browser cleanly."""
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
         log.info("🔒 Browser closed.")
 
     # ──────────────────────────────────────────────────────────
-    # PUBLIC METHOD — scrape all URLs
+    # PUBLIC — scrape all URLs
     # ──────────────────────────────────────────────────────────
 
-    def scrape_all(self, urls: list[str], progress_callback=None) -> list[ChalkPageData]:
+    def scrape_all(self, urls: list, progress_callback=None) -> list:
         """
         Scrapes all provided URLs one by one.
-
-        progress_callback: optional function(current, total, page_title) for UI updates
-        Returns list of ChalkPageData (one per URL)
+        Returns list of ChalkPageData objects.
         """
         results = []
 
         for i, url in enumerate(urls, start=1):
             page_title = get_page_title_from_url(url)
             log.info(f"\n[{i}/{len(urls)}] Scraping: {page_title}")
-            log.info(f"  URL: {url}")
 
             if progress_callback:
                 progress_callback(i, len(urls), page_title)
@@ -154,9 +190,9 @@ class ChalkScraper:
             data = self._scrape_single_page(url)
             results.append(data)
 
-            # Small pause between pages — be polite to the server
+            # Polite pause between pages
             if i < len(urls):
-                time.sleep(1)
+                time.sleep(1.5)
 
         return results
 
@@ -171,95 +207,127 @@ class ChalkScraper:
         data.page_id    = extract_page_id(url) or ""
         data.page_title = get_page_title_from_url(url)
 
-        page = self.context.new_page()
-
         try:
             # ── Navigate to the page ──────────────────────────
             log.info(f"  → Navigating to page...")
-            page.goto(url, timeout=PAGE_LOAD_TIMEOUT, wait_until="domcontentloaded")
+            self.driver.get(url)
 
-            # ── Check if we got redirected to login ───────────
-            if self._is_login_page(page):
+            # ── Check if redirected to login ──────────────────
+            if self._is_login_page():
                 data.error_message = (
                     "Redirected to login page. "
-                    "Please make sure you are logged into Chalk in Chrome and Chrome is fully closed before running this tool."
+                    "Please make sure you are logged into Chalk in Chrome "
+                    "and Chrome is fully closed before running this tool."
                 )
                 log.error(f"  ❌ {data.error_message}")
                 return data
 
-            # ── Wait for page content to appear ──────────────
-            log.info(f"  → Waiting for page to load...")
-            try:
-                page.wait_for_selector(".tabs-menu, [data-testid='tabs'], .tab-nav, ul.tabs", timeout=ELEMENT_WAIT_TIMEOUT)
-            except PlaywrightTimeout:
-                # Tabs might have different selector — try waiting for any content
-                page.wait_for_load_state("networkidle", timeout=PAGE_LOAD_TIMEOUT)
+            # ── Wait for page to load ─────────────────────────
+            log.info(f"  → Waiting for page content...")
+            self._wait_for_page_ready()
 
             # ── SCRAPE SUMMARY TAB ────────────────────────────
             log.info(f"  → Scraping Summary tab...")
-            data.summary = self._scrape_summary_tab(page)
+            data.summary = self._scrape_summary_tab()
 
             # ── SCRAPE EXECUTION SUMMARY TAB ──────────────────
             log.info(f"  → Scraping Execution Summary tab...")
-            exec_rows, exec_totals = self._scrape_execution_tab(page)
-            data.execution_rows   = exec_rows
-            data.execution_totals = exec_totals
+            rows, totals          = self._scrape_execution_tab()
+            data.execution_rows   = rows
+            data.execution_totals = totals
 
             data.scrape_success = True
-            log.info(f"  ✅ Successfully scraped: {data.page_title}")
+            log.info(f"  ✅ Done: {data.page_title}")
 
-        except PlaywrightTimeout:
-            data.error_message = f"Page timed out after {PAGE_LOAD_TIMEOUT//1000}s. Check VPN connection."
-            log.error(f"  ❌ Timeout: {data.error_message}")
+        except TimeoutException:
+            data.error_message = (
+                f"Page timed out after {PAGE_LOAD_TIMEOUT // 1000}s. "
+                "Check VPN connection."
+            )
+            log.error(f"  ❌ {data.error_message}")
+
+        except WebDriverException as e:
+            data.error_message = f"Browser error: {str(e)[:200]}"
+            log.error(f"  ❌ {data.error_message}")
 
         except Exception as e:
-            data.error_message = f"Unexpected error: {str(e)}"
-            log.error(f"  ❌ Error scraping {url}: {e}", exc_info=True)
-
-        finally:
-            page.close()
+            data.error_message = f"Unexpected error: {str(e)[:200]}"
+            log.error(f"  ❌ Error: {e}", exc_info=True)
 
         return data
 
     # ──────────────────────────────────────────────────────────
-    # SUMMARY TAB SCRAPING
+    # WAIT FOR PAGE READY
     # ──────────────────────────────────────────────────────────
 
-    def _scrape_summary_tab(self, page: Page) -> SummaryData:
-        """Click the Summary tab and extract all fields."""
+    def _wait_for_page_ready(self):
+        """
+        Wait for the Confluence page to fully load.
+        Tries multiple strategies since Confluence can be slow.
+        """
+        wait = WebDriverWait(self.driver, ELEMENT_WAIT_TIMEOUT // 1000)
+
+        # Strategy 1 — wait for tab elements to appear
+        tab_selectors = [
+            "ul.tabs-menu",
+            "[data-testid='tabs']",
+            ".tab-nav",
+            "a.tabs-menu-item",
+            "[role='tab']",
+        ]
+
+        for selector in tab_selectors:
+            try:
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+                log.info(f"     ✓ Page ready (found: {selector})")
+                return
+            except TimeoutException:
+                continue
+
+        # Strategy 2 — just wait for body content
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "#main-content, #content, .wiki-content")))
+            log.info("     ✓ Page ready (found main content)")
+        except TimeoutException:
+            # Last resort — just wait 3 seconds
+            log.warning("     ⚠️  Could not detect page ready state — waiting 3s...")
+            time.sleep(3)
+
+    # ──────────────────────────────────────────────────────────
+    # SUMMARY TAB
+    # ──────────────────────────────────────────────────────────
+
+    def _scrape_summary_tab(self) -> SummaryData:
+        """Click Summary tab and extract all fields."""
         summary = SummaryData()
 
         try:
             # Click the Summary tab
-            self._click_tab(page, SUMMARY_TAB_TEXT)
+            self._click_tab(SUMMARY_TAB_TEXT)
 
-            # Wait a moment for content to render
-            page.wait_for_timeout(2000)
+            # Wait for content to render after tab click
+            time.sleep(2)
 
-            # Get the full page HTML after tab click
-            html    = page.content()
-            soup    = BeautifulSoup(html, "html.parser")
+            # Parse current page HTML
+            soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
-            # ── Extract fields by looking for label → value pairs ──
-            # Confluence renders these as table rows or definition lists
-            # We search for the label text and get the adjacent cell
-
-            summary.fw_version           = self._find_field(soup, ["FW Version", "FW Version / Release", "Firmware Version"])
-            summary.start_date           = self._find_field(soup, ["Start Date of Current Build", "Start Date"])
-            summary.completion_date      = self._find_field(soup, ["Completion Date of Current Build", "Completion Date"])
-            summary.release_dev_complete = self._find_field(soup, ["Release Dev Complete"])
+            # Extract each field by its label
+            summary.fw_version             = self._find_field(soup, ["FW Version / Release", "FW Version", "Firmware Version"])
+            summary.start_date             = self._find_field(soup, ["Start Date of Current Build", "Start Date"])
+            summary.completion_date        = self._find_field(soup, ["Completion Date of Current Build", "Completion Date"])
+            summary.release_dev_complete   = self._find_field(soup, ["Release Dev Complete"])
             summary.release_val_completion = self._find_field(soup, ["Release Val Completion", "Release Val Complete"])
-            summary.release_dlm_complete = self._find_field(soup, ["Release DLM Complete"])
-            summary.type                 = self._find_field(soup, ["Type"])
-            summary.on_schedule          = self._find_field(soup, ["On Schedule"])
-            summary.cr_details           = self._find_field(soup, ["CR Details"])
-            summary.status               = self._find_field(soup, ["Status"])
-            summary.osc_version          = self._find_field(soup, ["OSC Version"])
-            summary.overall_summary      = self._find_field(soup, ["Overall Summary"])
-            summary.he                   = self._find_field(soup, ["HE"])
-            summary.primary              = self._find_field(soup, ["Primary"])
-            summary.testers              = self._find_field(soup, ["Testers"])
-            summary.pm                   = self._find_field(soup, ["PM"])
+            summary.release_dlm_complete   = self._find_field(soup, ["Release DLM Complete"])
+            summary.type                   = self._find_field(soup, ["Type"])
+            summary.on_schedule            = self._find_field(soup, ["On Schedule"])
+            summary.cr_details             = self._find_field(soup, ["CR Details"])
+            summary.status                 = self._find_field(soup, ["Status"])
+            summary.osc_version            = self._find_field(soup, ["OSC Version"])
+            summary.overall_summary        = self._find_field(soup, ["Overall Summary"])
+            summary.he                     = self._find_field(soup, ["HE"])
+            summary.primary                = self._find_field(soup, ["Primary"])
+            summary.testers                = self._find_field(soup, ["Testers"])
+            summary.pm                     = self._find_field(soup, ["PM"])
 
         except Exception as e:
             log.warning(f"  ⚠️  Error scraping Summary tab: {e}")
@@ -267,54 +335,48 @@ class ChalkScraper:
         return summary
 
     # ──────────────────────────────────────────────────────────
-    # EXECUTION SUMMARY TAB SCRAPING
+    # EXECUTION SUMMARY TAB
     # ──────────────────────────────────────────────────────────
 
-    def _scrape_execution_tab(self, page: Page) -> tuple[list[ExecutionRow], ExecutionRow]:
-        """Click the Execution Summary tab and extract the table."""
+    def _scrape_execution_tab(self) -> tuple:
+        """Click Execution Summary tab and extract the table."""
         rows   = []
         totals = ExecutionRow()
 
         try:
-            # Click the Execution Summary tab
-            self._click_tab(page, EXECUTION_SUMMARY_TAB_TEXT)
+            # Click the tab
+            self._click_tab(EXECUTION_SUMMARY_TAB_TEXT)
 
-            # Wait for table to appear
-            page.wait_for_timeout(2000)
+            # Wait for table to render
+            time.sleep(2)
 
-            # Get page HTML
-            html = page.content()
-            soup = BeautifulSoup(html, "html.parser")
-
-            # Find the Overall Summary table
-            # It has headers: Execution Cycle, Total Planned, Total Executed, Passed, etc.
+            # Parse HTML
+            soup  = BeautifulSoup(self.driver.page_source, "html.parser")
             table = self._find_execution_table(soup)
 
             if not table:
                 log.warning("  ⚠️  Could not find Execution Summary table.")
                 return rows, totals
 
-            # Parse table rows
-            all_rows = table.find_all("tr")
+            all_trs = table.find_all("tr")
 
-            for tr in all_rows:
-                cells = tr.find_all(["td", "th"])
+            for tr in all_trs:
+                cells      = tr.find_all(["td", "th"])
                 if len(cells) < 2:
                     continue
 
-                cell_texts = [self._clean_text(c.get_text()) for c in cells]
+                cell_texts = [self._clean(c.get_text()) for c in cells]
 
                 # Skip header row
                 if any(h in cell_texts[0].lower() for h in ["execution cycle", "cycle", "test cycle"]):
                     continue
 
-                # Check if it's a total/summary row (bold, or first cell is empty/bold)
+                # Detect totals row — first cell is empty or bold
                 first_cell = cells[0]
                 is_total   = (
-                    first_cell.find("strong") is not None or
-                    first_cell.find("b") is not None or
                     cell_texts[0].strip() == "" or
-                    "total" in cell_texts[0].lower()
+                    "total" in cell_texts[0].lower() or
+                    first_cell.find(["strong", "b"]) is not None
                 )
 
                 row = self._parse_execution_row(cell_texts)
@@ -330,99 +392,111 @@ class ChalkScraper:
         return rows, totals
 
     # ──────────────────────────────────────────────────────────
-    # HELPERS
+    # CLICK TAB HELPER
     # ──────────────────────────────────────────────────────────
 
-    def _click_tab(self, page: Page, tab_text: str):
+    def _click_tab(self, tab_text: str):
         """
-        Clicks a tab by its visible text label.
-        Tries multiple selector strategies since Confluence can vary.
+        Click a tab by its visible text.
+        Tries multiple selector strategies for Confluence compatibility.
         """
-        # Strategy 1: Find by exact text in tab navigation
-        try:
-            tab = page.locator(f"text='{tab_text}'").first
-            tab.wait_for(timeout=ELEMENT_WAIT_TIMEOUT)
-            tab.click()
-            page.wait_for_timeout(1500)
-            log.info(f"     ✓ Clicked tab: '{tab_text}' (strategy 1)")
-            return
-        except Exception:
-            pass
+        wait = WebDriverWait(self.driver, ELEMENT_WAIT_TIMEOUT // 1000)
 
-        # Strategy 2: Look for tab in common Confluence tab selectors
-        selectors = [
-            f"li a:has-text('{tab_text}')",
-            f"[role='tab']:has-text('{tab_text}')",
-            f".tab-nav a:has-text('{tab_text}')",
-            f"a.tabs-menu-item:has-text('{tab_text}')",
-            f"span:has-text('{tab_text}')",
+        # All strategies to find and click a tab
+        strategies = [
+            # XPath — find any element whose text exactly matches
+            (By.XPATH, f"//*[normalize-space(text())='{tab_text}']"),
+            # XPath — partial match (handles extra whitespace)
+            (By.XPATH, f"//*[contains(text(),'{tab_text}')]"),
+            # CSS — anchor inside tab list
+            (By.CSS_SELECTOR, f"ul.tabs-menu a"),
+            # Role-based
+            (By.XPATH, f"//*[@role='tab' and contains(text(),'{tab_text}')]"),
         ]
 
-        for selector in selectors:
+        for by, selector in strategies:
             try:
-                el = page.locator(selector).first
-                el.wait_for(timeout=3000)
-                el.click()
-                page.wait_for_timeout(1500)
-                log.info(f"     ✓ Clicked tab: '{tab_text}' (selector: {selector})")
-                return
+                if by == By.CSS_SELECTOR and "ul.tabs-menu" in selector:
+                    # Special case — find the right tab from the list
+                    tabs = self.driver.find_elements(by, selector)
+                    for tab in tabs:
+                        if tab_text.lower() in tab.text.lower():
+                            self.driver.execute_script("arguments[0].click();", tab)
+                            time.sleep(1.5)
+                            log.info(f"     ✓ Clicked tab: '{tab_text}'")
+                            return
+                else:
+                    elements = self.driver.find_elements(by, selector)
+                    for el in elements:
+                        if tab_text.lower() in el.text.lower():
+                            # Scroll into view then click
+                            self.driver.execute_script("arguments[0].scrollIntoView(true);", el)
+                            time.sleep(0.3)
+                            self.driver.execute_script("arguments[0].click();", el)
+                            time.sleep(1.5)
+                            log.info(f"     ✓ Clicked tab: '{tab_text}'")
+                            return
             except Exception:
                 continue
 
-        log.warning(f"     ⚠️  Could not click tab '{tab_text}' — tab may not exist on this page.")
+        log.warning(f"     ⚠️  Could not click tab '{tab_text}' — may not exist on this page.")
 
-    def _find_field(self, soup: BeautifulSoup, label_variants: list[str]) -> str:
+    # ──────────────────────────────────────────────────────────
+    # FIELD EXTRACTION HELPER
+    # ──────────────────────────────────────────────────────────
+
+    def _find_field(self, soup: BeautifulSoup, label_variants: list) -> str:
         """
-        Finds a field value by searching for its label in the page HTML.
+        Finds a field value by searching for its label in the HTML.
 
         Confluence renders fields as table rows:
           <tr>
-            <td>FW Version / Release</td>   ← label cell
-            <td>5.4.0</td>                  ← value cell
+            <td>FW Version / Release</td>   ← label
+            <td>5.4.0</td>                  ← value  ← we want this
           </tr>
-
-        Tries all label variants (since field names can differ slightly).
         """
         for label in label_variants:
-            # Search all table cells and divs for the label text
             for cell in soup.find_all(["td", "th", "div", "span", "p"]):
-                cell_text = self._clean_text(cell.get_text())
-                if label.lower() in cell_text.lower() and len(cell_text) < 80:
-                    # Found the label cell — now get the NEXT sibling cell (value)
-                    value_cell = cell.find_next_sibling(["td", "th"])
-                    if value_cell:
-                        return self._clean_text(value_cell.get_text())
+                cell_text = self._clean(cell.get_text())
 
-                    # Or try parent row's next cell
+                # Match label (case-insensitive, short enough to be a label not content)
+                if label.lower() in cell_text.lower() and len(cell_text) < 100:
+
+                    # Try direct sibling first
+                    sibling = cell.find_next_sibling(["td", "th"])
+                    if sibling:
+                        val = self._clean(sibling.get_text())
+                        if val:
+                            return val
+
+                    # Try next cell in same row
                     parent_row = cell.find_parent("tr")
                     if parent_row:
                         cells_in_row = parent_row.find_all(["td", "th"])
                         for i, c in enumerate(cells_in_row):
-                            if label.lower() in self._clean_text(c.get_text()).lower():
-                                # Return the next cell's text
+                            if label.lower() in self._clean(c.get_text()).lower():
                                 if i + 1 < len(cells_in_row):
-                                    return self._clean_text(cells_in_row[i + 1].get_text())
+                                    val = self._clean(cells_in_row[i + 1].get_text())
+                                    if val:
+                                        return val
 
-        return ""  # field not found
+        return ""
+
+    # ──────────────────────────────────────────────────────────
+    # OTHER HELPERS
+    # ──────────────────────────────────────────────────────────
 
     def _find_execution_table(self, soup: BeautifulSoup):
-        """
-        Finds the Overall Summary execution table in the page.
-        Looks for a table containing 'Execution Cycle' or 'Sanity' in headers.
-        """
+        """Find the execution summary table by looking for known keywords."""
         for table in soup.find_all("table"):
-            table_text = table.get_text().lower()
-            if any(keyword in table_text for keyword in [
-                "execution cycle", "sanity", "total planned", "total executed"
-            ]):
+            text = table.get_text().lower()
+            if any(kw in text for kw in ["execution cycle", "sanity", "total planned", "total executed"]):
                 return table
         return None
 
-    def _parse_execution_row(self, cells: list[str]) -> ExecutionRow:
-        """Convert a list of cell text values into an ExecutionRow dataclass."""
+    def _parse_execution_row(self, cells: list) -> ExecutionRow:
+        """Map cell list to ExecutionRow dataclass by position."""
         row = ExecutionRow()
-        # Map cells by position (based on table structure in image)
-        # Col: Execution Cycle | Total Planned | Total Executed | Passed | Passed% | Failed | Failed% | Blocked | Blocked%
         if len(cells) > 0: row.cycle          = cells[0]
         if len(cells) > 1: row.total_planned  = cells[1]
         if len(cells) > 2: row.total_executed = cells[2]
@@ -434,23 +508,20 @@ class ChalkScraper:
         if len(cells) > 8: row.blocked_pct    = cells[8]
         return row
 
-    def _is_login_page(self, page: Page) -> bool:
-        """Check if we got redirected to a login page instead of the Chalk page."""
-        current_url = page.url.lower()
-        page_title  = page.title().lower()
+    def _is_login_page(self) -> bool:
+        """Check if we landed on a login page instead of the Chalk page."""
+        url   = self.driver.current_url.lower()
+        title = self.driver.title.lower()
         return (
-            "login" in current_url or
-            "signin" in current_url or
-            "authenticate" in current_url or
-            "log in" in page_title or
-            "sign in" in page_title
+            "login"        in url   or
+            "signin"       in url   or
+            "authenticate" in url   or
+            "log in"       in title or
+            "sign in"      in title
         )
 
-    def _clean_text(self, text: str) -> str:
-        """Strip and clean whitespace from extracted text."""
+    def _clean(self, text: str) -> str:
+        """Clean and normalize whitespace in extracted text."""
         if not text:
             return ""
-        # Replace multiple whitespace/newlines with single space
-        import re
-        text = re.sub(r'\s+', ' ', text)
-        return text.strip()
+        return re.sub(r'\s+', ' ', text).strip()

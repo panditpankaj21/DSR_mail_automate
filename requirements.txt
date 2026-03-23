@@ -1,13 +1,15 @@
 # ─────────────────────────────────────────────────────────────
 # requirements.txt
-# Install with: pip install -r requirements.txt
-# Then run:     playwright install chromium
+#
+# Install with:   pip install -r requirements.txt
+# Then run:       python main.py
+#
+# WHY SELENIUM INSTEAD OF PLAYWRIGHT:
+#   Playwright needs 'greenlet' which requires Microsoft Visual C++ 14.0
+#   to compile on Python 3.13+. Selenium has pre-built wheels for ALL
+#   Python versions — zero compilation, zero C++ needed.
 # ─────────────────────────────────────────────────────────────
 
-playwright==1.42.0        # browser automation — has pre-built wheels for all Python versions
+selenium==4.21.0          # browser automation — pre-built wheels, works on Python 3.13+
 beautifulsoup4==4.12.3    # HTML parser — extracts data from page content
-rich==13.7.1              # beautiful terminal output — tables, colors, progress bars
-
-# NOTE: No lxml — we use Python's built-in html.parser instead.
-# lxml requires Microsoft Visual C++ build tools to compile on Windows.
-# html.parser works perfectly and needs zero installation.
+rich==13.7.1              # beautiful terminal output — tables, colors, progress
