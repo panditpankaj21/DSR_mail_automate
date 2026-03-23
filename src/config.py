@@ -40,7 +40,7 @@ CHROME_PROFILE_PATH = get_chrome_profile_path()
 # Which Chrome profile to use
 # "Default" is the main profile. If you use multiple Chrome profiles,
 # change to "Profile 1", "Profile 2" etc.
-CHROME_PROFILE_NAME = "Default"
+CHROME_PROFILE_NAME = "Profile 2"
 
 # ── Tab Names on Chalk Page ───────────────────────────────────
 SUMMARY_TAB_TEXT           = "Summary"

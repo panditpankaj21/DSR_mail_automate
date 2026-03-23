@@ -74,9 +74,8 @@ def show_welcome():
     console.print()
 
     checklist = [
-        ("1", "You are logged into [bold]chalk.charter.com[/bold] in Google Chrome"),
-        ("2", "Your [bold]VPN is connected[/bold]"),
-        ("3", "Google Chrome is [bold]fully closed[/bold] (not just minimized)"),
+        ("1", "Your [bold]VPN is connected[/bold]"),
+        ("2", "You can open [bold]chalk.charter.com[/bold] in your browser normally"),
     ]
 
     for num, item in checklist:
